@@ -1,0 +1,16 @@
+{
+  "name": "unsettled/member-leave-notification",
+  "description": "Checks if a member has left corp since last check",
+  "minimum-stability": "dev",
+  "license": "BSD-3-Clause",
+  "authors": [
+    {
+      "name": "Zumochi",
+      "email": "zumpyzum@gmail.com"
+    }
+  ],
+  "require": {
+    "3rdpartyeve/phealng": "2.2.1",
+    "cleentfaar/slack": "0.17.1"
+  }
+}

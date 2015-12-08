@@ -1,0 +1,5 @@
+.idea
+src/Config.php
+tmp
+test
+vendor
