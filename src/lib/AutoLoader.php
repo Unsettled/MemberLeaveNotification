@@ -4,7 +4,7 @@ namespace AutoLoader;
 
 
 class AutoLoader {
-    protected static $srcPath = "src/lib/";
+    protected static $srcPath = WORKING_DIR . "/src/lib/";
 
     public static function Load($class) {
         $classPath = str_replace("\\", DIRECTORY_SEPARATOR, $class);

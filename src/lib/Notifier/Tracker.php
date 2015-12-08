@@ -27,9 +27,9 @@ class Tracker
     function __construct()
     {
         // Configure Pheal
-        Config::getInstance()->cache = new FileCache('tmp/cache/');
+        Config::getInstance()->cache = new FileCache(WORKING_DIR . '/tmp/cache/');
         Config::getInstance()->access = new StaticCheck();
-        Config::getInstance()->log = new FileLog('tmp/log/');
+        Config::getInstance()->log = new FileLog(WORKING_DIR . '/tmp/log/');
         Config::getInstance()->http_ssl_verifypeer = false;
         Config::getInstance()->http_user_agent = USER_AGENT;
 

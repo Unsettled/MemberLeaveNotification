@@ -15,7 +15,7 @@ Need to make sure all access is revoked when a member leaves your corporation, b
 * Create a Slack token on https://api.slack.com/tokens
 * Copy `src/Config.sample.php` to `src/Config.php` and edit the values
 * Run `composer install`
-* Make sure your webserver/PHP user has write access to this folder, or create the `tmp` folder yourself:
+* Make sure your web server/PHP user has write access to this folder, or create the `tmp` folder yourself:
   * `mkdir tmp`
   * `chown www-data: tmp/`
 * Set up a cron job (or task on Windows) that runs the `check.php` script every so often (max once every 30 minutes.)

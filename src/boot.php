@@ -1,9 +1,9 @@
 <?php
 
 $files = array(
-    'src/Config.php',
-    'src/lib/AutoLoader.php',
-    'vendor/autoload.php'
+    WORKING_DIR . '/src/Config.php',
+    WORKING_DIR . '/src/lib/AutoLoader.php',
+    WORKING_DIR . '/vendor/autoload.php'
 );
 
 foreach ($files as $file) {
