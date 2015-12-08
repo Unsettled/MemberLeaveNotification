@@ -5,7 +5,7 @@ namespace Helpers;
 
 class Cacher
 {
-    public $cachePath = '../tmp/cache/';
+    public $cachePath = 'tmp/cache/';
     public $cacheTime = 3600;
 
     function __construct()
