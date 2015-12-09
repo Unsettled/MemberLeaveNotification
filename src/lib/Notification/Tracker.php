@@ -1,6 +1,6 @@
 <?php
 
-namespace Notifier;
+namespace Notification;
 
 
 use CL\Slack\Payload\ChatPostMessagePayload;
@@ -40,16 +40,21 @@ class Tracker
         $guzzle = new Client($options);
         $this->slack = new ApiClient(SLACK_TOKEN, $guzzle);
         $this->payload = new ChatPostMessagePayload();
-        $this->payload->setChannel(SLACK_CHANNEL);
         $this->payload->setUsername(SLACK_USERNAME);
     }
 
-    function Execute()
+    /**
+     * @param Type[] $notificationTypes
+     */
+    function Execute($notificationTypes)
     {
         $notifications = $this->GetNotificationData();
-        $left = $this->GetMemberLeft($notifications);
-        $last = $this->GetLastLeftNotification();
-        $this->SendNotifications($left, $last);
+
+        foreach($notificationTypes as $type) {
+            $typeNotifications = $this->GetRequestedNotifications($notifications, $type->ID);
+            $lastNotificationID = $this->GetLastNotificationID($type->name);
+            $this->SendNotifications($typeNotifications, $lastNotificationID, $type);
+        }
     }
 
     /**
@@ -62,42 +67,46 @@ class Tracker
 
     /**
      * @param \Pheal\Core\RowSetRow $notifications
+     * @param int $typeID
      * @return array
+     * @internal param $eventID
      */
-    function GetMemberLeft($notifications)
+    function GetRequestedNotifications($notifications, $typeID)
     {
-        $left = array();
+        $members = array();
 
         foreach ($notifications->notifications as $notification) {
-            if ((int)$notification->typeID === 21) {
-                $left[] = $notification;
+            if ((int)$notification->typeID === $typeID) {
+                $members[] = json_decode(json_encode($notification), true);
             }
         }
 
-        return $left;
+        return $members;
     }
 
     /**
-     * @return array
+     * @param string $action
+     * @return int
      */
-    function GetLastLeftNotification()
+    function GetLastNotificationID($action)
     {
-        $notification = $this->cache->LoadArray("lastMemberLeft");
-        if (!empty($notification)) {
-            return $notification;
+        $notificationID = $this->cache->LoadData("last$action");
+        if (!empty($notificationID)) {
+            return (int)$notificationID;
         }
 
         // Last member leaving not saved, assume none have been recorded yet.
-        return array('notificationID' => 0);
+        return 0;
     }
 
     /**
      * Update our cache with the last member that left corp
-     * @param \Pheal\Core\RowSetRow $notification
+     * @param int $notification
+     * @param string $typeName
      */
-    function UpdateLastLeft($notification)
+    function UpdateLastNotification($notification, $typeName)
     {
-        $this->cache->SaveArray($notification, "lastMemberLeft");
+        $this->cache->SaveData($notification, "last$typeName");
     }
 
     /**
@@ -114,21 +123,25 @@ class Tracker
     }
 
     /**
-     * Send a notification about members who last left the corp.
+     * Sends a message to Slack with notification info.
      * First check if notification has not already been sent.
-     * @param array $left Array of RowSetRow objects from Pheal
-     * @param array $last Associative array
+     * @param array $notifications
+     * @param int $last The previous notification of the same type
+     * @param Type $type
+     * @throws \CL\Slack\Exception\SlackException
      */
-    private function SendNotifications($left, $last)
+    private function SendNotifications($notifications, $last, $type)
     {
-        foreach ($left as $member) {
-            if ((int)$member->notificationID > (int)$last['notificationID']) {
-                $message = $member->senderName . " left corp at " . $member->sentDate;
+        foreach ($notifications as $notification) {
+            $currentNotificationID = (int)$notification['notificationID'];
+            if ($currentNotificationID > $last) {
+                $message = "{$notification['senderName']} {$type->messageText} at {$notification['sentDate']}";
                 $payload = $this->payload;
+                $payload->setChannel($type->channel);
                 $payload->setText($message);
                 $response = $this->slack->send($payload);
                 if ($response->isOk()) {
-                    $this->UpdateLastLeft($member);
+                    $this->UpdateLastNotification($currentNotificationID, $type->name);
                 }
             }
         }

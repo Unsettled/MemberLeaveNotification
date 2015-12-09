@@ -36,14 +36,14 @@ class Cacher
 
     public function SaveArray($array, $filename)
     {
-        $filePath = $this->CleanFilename($filename, false);
+        $filePath = $this->CleanFilename($filename);
         $data = json_encode($array);
         file_put_contents($filePath, $data);
     }
 
     public function LoadArray($filename)
     {
-        $filePath = $this->CleanFilename($filename, false);
+        $filePath = $this->CleanFilename($filename);
         if (!is_readable($filePath)) {
             return false;
         }
@@ -65,17 +65,15 @@ class Cacher
         return false;
     }
 
-    private function CleanFilename($filename, $hash = true)
+    private function CleanFilename($filename)
     {
-        if ($hash) return $this->cachePath . md5($filename) . ".cache";
-
         // Replace spaces with dashes
-        $string = str_replace(' ', '-', $filename);
+        $filename = str_replace(' ', '-', $filename);
         // Replace multiple dashes with a single dash
-        $string = preg_replace('/-+/', '-', $string);
+        $filename = preg_replace('/-+/', '-', $filename);
         // Strip any non-alphanumeric character or dash
-        $string = preg_replace('/[^[:alnum:]\-]/', '', $string);
+        $filename = preg_replace('/[^[:alnum:]\-]/', '', $filename);
 
-        return $this->cachePath . $string . ".cache";
+        return "{$this->cachePath}$filename.cache";
     }
 }
