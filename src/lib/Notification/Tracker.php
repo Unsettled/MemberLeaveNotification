@@ -77,6 +77,7 @@ class Tracker
 
         foreach ($notifications->notifications as $notification) {
             if ((int)$notification->typeID === $typeID) {
+                // TODO: Revert to using RowSetRow objects instead of arrays to reduce unnecessary function calls ~
                 $members[] = json_decode(json_encode($notification), true);
             }
         }
@@ -132,6 +133,12 @@ class Tracker
      */
     private function SendNotifications($notifications, $last, $type)
     {
+        /**
+         * TODO: Create an attachment with ALL notifications instead of sending messages per notification.
+         * This also has the advantage that they can be colorized for much easier recognition besides the text.
+         * See https://api.slack.com/docs/attachments
+         * Our Slack library has both Attachment and AttachmentField models to help.
+         */
         foreach ($notifications as $notification) {
             $currentNotificationID = (int)$notification['notificationID'];
             if ($currentNotificationID > $last) {
