@@ -51,7 +51,7 @@ class Tracker
         $notifications = $this->GetNotificationData();
 
         foreach($notificationTypes as $type) {
-            $typeNotifications = $this->GetRequestedNotifications($notifications, $type->ID);
+            $typeNotifications = array_reverse($this->GetRequestedNotifications($notifications, $type->ID));
             $lastNotificationID = $this->GetLastNotificationID($type->name);
             $this->SendNotifications($typeNotifications, $lastNotificationID, $type);
         }
