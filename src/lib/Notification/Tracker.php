@@ -51,9 +51,9 @@ class Tracker
         $notifications = $this->GetNotificationData();
 
         foreach($notificationTypes as $type) {
-            $typeNotifications = array_reverse($this->GetRequestedNotifications($notifications, $type->ID));
+            $currentTypeNotifications = $this->GetRequestedNotifications($notifications, $type->ID);
             $lastNotificationID = $this->GetLastNotificationID($type->name);
-            $this->SendNotifications($typeNotifications, $lastNotificationID, $type);
+            $this->SendNotifications($currentTypeNotifications, $lastNotificationID, $type);
         }
     }
 
@@ -66,23 +66,21 @@ class Tracker
     }
 
     /**
-     * @param \Pheal\Core\RowSetRow $notifications
+     * @param \Pheal\Core\RowSetRow $type
      * @param int $typeID
-     * @return array
-     * @internal param $eventID
+     * @return \Pheal\Core\RowSetRow[]
      */
-    function GetRequestedNotifications($notifications, $typeID)
+    function GetRequestedNotifications($type, $typeID)
     {
-        $members = array();
+        $notifications = array();
 
-        foreach ($notifications->notifications as $notification) {
+        foreach ($type->notifications as $notification) {
             if ((int)$notification->typeID === $typeID) {
-                // TODO: Revert to using RowSetRow objects instead of arrays to reduce unnecessary function calls ~
-                $members[] = json_decode(json_encode($notification), true);
+                $notifications[] = $notification;
             }
         }
 
-        return $members;
+        return array_reverse($notifications);
     }
 
     /**
@@ -91,9 +89,10 @@ class Tracker
      */
     function GetLastNotificationID($action)
     {
-        $notificationID = $this->cache->LoadData("last$action");
-        if (!empty($notificationID)) {
-            return (int)$notificationID;
+        $notification = $this->cache->LoadArray("last$action");
+
+        if (!empty($notification)) {
+            return (int)$notification['notificationID'];
         }
 
         // Last member leaving not saved, assume none have been recorded yet.
@@ -102,12 +101,12 @@ class Tracker
 
     /**
      * Update our cache with the last member that left corp
-     * @param int $notification
+     * @param \Pheal\Core\RowSetRow $notification
      * @param string $typeName
      */
     function UpdateLastNotification($notification, $typeName)
     {
-        $this->cache->SaveData($notification, "last$typeName");
+        $this->cache->SaveArray($notification, "last$typeName");
     }
 
     /**
@@ -127,11 +126,11 @@ class Tracker
      * Sends a message to Slack with notification info.
      * First check if notification has not already been sent.
      * @param array $notifications
-     * @param int $last The previous notification of the same type
+     * @param int $lastID The previous notification ID of the same type
      * @param Type $type
      * @throws \CL\Slack\Exception\SlackException
      */
-    private function SendNotifications($notifications, $last, $type)
+    private function SendNotifications($notifications, $lastID, $type)
     {
         /**
          * TODO: Create an attachment with ALL notifications instead of sending messages per notification.
@@ -140,15 +139,14 @@ class Tracker
          * Our Slack library has both Attachment and AttachmentField models to help.
          */
         foreach ($notifications as $notification) {
-            $currentNotificationID = (int)$notification['notificationID'];
-            if ($currentNotificationID > $last) {
-                $message = "{$notification['senderName']} {$type->messageText} at {$notification['sentDate']}";
+            if ((int)$notification->notificationID > $lastID) {
+                $message = "{$notification->senderName} {$type->messageText} at {$notification->sentDate}";
                 $payload = $this->payload;
                 $payload->setChannel($type->channel);
                 $payload->setText($message);
                 $response = $this->slack->send($payload);
                 if ($response->isOk()) {
-                    $this->UpdateLastNotification($currentNotificationID, $type->name);
+                    $this->UpdateLastNotification($notification, $type->name);
                 }
             }
         }

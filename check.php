@@ -5,9 +5,9 @@ require(WORKING_DIR . '/src/boot.php');
 
 // TODO: make singleton configuration class
 $notifications = array(
-    new \Notification\Type(16, "MemberApplication", "applied to join", "unset-internal-affair"),
-    new \Notification\Type(128, "MemberJoined", "joined corp", "unset-internal-affair"),
-    new \Notification\Type(21, "MemberLeft", "left corp", "unset-internal-affair"),
+    new \Notification\Type(16, "MemberApplication", "applied to join", "#unset-dev"),
+    new \Notification\Type(128, "MemberJoined", "joined corp", "#unset-dev"),
+    new \Notification\Type(21, "MemberLeft", "left corp", "#unset-dev"),
 );
 
 $tracker = new \Notification\Tracker();
